@@ -1,4 +1,4 @@
-package com.rockthejvm.playground.part1as
+package com.rockthejvm.part1as
 
 import scala.annotation.targetName
 import scala.util.Try
