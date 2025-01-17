@@ -82,7 +82,7 @@ object FunctionalSetPlayground {
     println(first5(6)) //false
     println((first5 + 10).contains(10)) //true
     println(first5.map(_ * 2).contains(10)) //true
-    println(first5.map(_ % 2))
-    println(first5.flatMap(x => FSet(x, x+1)).contains(7))
+    println(first5.map(_ % 2).contains(1)) //true
+    println(first5.flatMap(x => FSet(x, x+1)).contains(7)) //false
   }
 }
