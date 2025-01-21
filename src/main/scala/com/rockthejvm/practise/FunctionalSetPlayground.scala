@@ -139,10 +139,10 @@ object FunctionalSetPlayground {
 //    println(first5.map(_ % 2).contains(1)) //true
 //    println(first5.flatMap(x => FSet(x, x+1)).contains(7)) //false
 
-    //test utils
-    println((first5 - 3).contains(3)) // false
-    println((first5 -- first10).contains(3)) //false
-    println((first5 & first10).contains(3)) //true
+//    //test utils
+//    println((first5 - 3).contains(3)) // false
+//    println((first5 -- first10).contains(3)) //false
+//    println((first5 & first10).contains(3)) //true
 
     //test PB
     val naturals = new PBSet[Int]( _ => true)
