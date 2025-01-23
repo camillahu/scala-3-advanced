@@ -118,12 +118,10 @@ object LzList {
 
   def apply[A](values: A*) = LzList.from(values.toList)
 
-  def fibonacci[Int](): LzList[Int] = {
-    LzList.generate(1){(newFib) => 
-      
-    }
-  }
+//  def fibonacci(fibs:(Int, Int)): (Int,Int) = {
+
 }
+
 
 object LzListPlayground {
   def main(args: Array[String]): Unit = {
@@ -148,5 +146,8 @@ object LzListPlayground {
       string <- LzList("black", "white")
     } yield s"$number-$string"
     println(combinationsLazy.toList)
+
+    val fibonacci =  LzList.generate((0, 1))(fib => (fib._2, fib._1 + fib._2)).map(fib => fib._1 + fib._2)
+    println(fibonacci.takeAsList(30))
   }
 }
