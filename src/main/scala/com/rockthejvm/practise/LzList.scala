@@ -200,7 +200,5 @@ object LzListPlayground {
 
     val primeSolution = LzList.eratosthenes
     println(primeSolution.takeAsList(100))
-
-
   }
 }
