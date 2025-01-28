@@ -102,6 +102,7 @@ class LzCons[A](hd: => A, tl: => LzList[A]) extends LzList[A] {
       // not using head #:: tail.take(n-1) because it's not lazy
       else new LzCons(head, tail.take(n - 1))
   }
+
 }
 
 
@@ -118,9 +119,36 @@ object LzList {
 
   def apply[A](values: A*) = LzList.from(values.toList)
 
-//  def fibonacci(fibs:(Int, Int)): (Int,Int) = {
+  def fibonacci: LzList[BigInt] = {
+    def fibo(first: BigInt, second: BigInt): LzList[BigInt] =
+      new LzCons[BigInt](first, fibo(second, first + second))
 
+    fibo(1,2)
+  }
+
+  def eratosthenes: LzList[Int] = {
+    def isPrime(n: Int): Boolean = {
+      @tailrec
+      def isPrimeTailRec(potentialDivisor: Int): Boolean = {
+        if (potentialDivisor < 2) true
+        else if (n % potentialDivisor == 0) false
+        else isPrimeTailRec(potentialDivisor - 1)
+      }
+
+      isPrimeTailRec(n / 2)
+    }
+
+    def sieve(numbers: LzList[Int]): LzList[Int] = {
+      if (numbers.isEmpty) numbers
+      else if (!isPrime(numbers.head)) sieve(numbers.tail)
+      else new LzCons[Int](numbers.head, sieve(numbers.tail.filter(_ % numbers.head != 0)))
+    }
+
+    val naturalsFrom2 = LzList.generate(2)(_ + 1)
+    sieve(naturalsFrom2)
+  }
 }
+
 
 
 object LzListPlayground {
@@ -135,19 +163,44 @@ object LzListPlayground {
 //    val first50kList = first50k.toList
 //    println(first50kList)
 
-    //test classics
-    println(naturals.map(_ *2).takeAsList(100))
-    println(naturals.flatMap(x => LzList(x, x + 1)).takeAsList(100))
-    println(naturals.filter(_ < 10).takeAsList(9))
-    // println(naturals.filter(_ < 10).takeAsList(10)) // crash with SO or infinite rec
+//    //test classics
+//    println(naturals.map(_ *2).takeAsList(100))
+//    println(naturals.flatMap(x => LzList(x, x + 1)).takeAsList(100))
+//    println(naturals.filter(_ < 10).takeAsList(9))
+//    // println(naturals.filter(_ < 10).takeAsList(10)) // crash with SO or infinite rec
+//
+//    val combinationsLazy = for {
+//      number <- LzList(1,2,3)
+//      string <- LzList("black", "white")
+//    } yield s"$number-$string"
+//    println(combinationsLazy.toList)
+//
+//    val fibonacci =  LzList.generate((0, 1))(fib => (fib._2, fib._1 + fib._2)).map(fib => fib._1 + fib._2)
+//    println(fibonacci.takeAsList(30))
 
-    val combinationsLazy = for {
-      number <- LzList(1,2,3)
-      string <- LzList("black", "white")
-    } yield s"$number-$string"
-    println(combinationsLazy.toList)
+    val fiboSolution = LzList.fibonacci
+    println(fiboSolution.takeAsList(100))
 
-    val fibonacci =  LzList.generate((0, 1))(fib => (fib._2, fib._1 + fib._2)).map(fib => fib._1 + fib._2)
-    println(fibonacci.takeAsList(30))
+    // not working
+//    def isPrime(n: Int, l: LzList[Int]): Boolean = {
+//      def checkNum(newList: LzList[Int]): Boolean = {
+//        if (newList.isEmpty) false
+//        else if (n % newList.head == 0) true
+//        else checkNum(newList.tail)
+//      }
+//      checkNum(l)
+//    }
+//
+//    val primeList = LzList.generate((2, LzCons(2, LzEmpty()))){ case (n, primes) =>
+//      if (isPrime(n+1, primes)) (n+1, new LzCons[Int](n+1, primes))
+//      else (n + 1, primes)
+//    }
+//
+//    println(primeList.map(_._1)takeAsList(10))
+
+    val primeSolution = LzList.eratosthenes
+    println(primeSolution.takeAsList(100))
+
+
   }
 }
