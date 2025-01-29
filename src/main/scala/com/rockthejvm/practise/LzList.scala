@@ -178,8 +178,8 @@ object LzListPlayground {
 //    val fibonacci =  LzList.generate((0, 1))(fib => (fib._2, fib._1 + fib._2)).map(fib => fib._1 + fib._2)
 //    println(fibonacci.takeAsList(30))
 
-    val fiboSolution = LzList.fibonacci
-    println(fiboSolution.takeAsList(100))
+//    val fiboSolution = LzList.fibonacci
+//    println(fiboSolution.takeAsList(100))
 
     // not working
 //    def isPrime(n: Int, l: LzList[Int]): Boolean = {
@@ -198,7 +198,7 @@ object LzListPlayground {
 //
 //    println(primeList.map(_._1)takeAsList(10))
 
-    val primeSolution = LzList.eratosthenes
-    println(primeSolution.takeAsList(100))
+//    val primeSolution = LzList.eratosthenes
+//    println(primeSolution.takeAsList(100))
   }
 }
