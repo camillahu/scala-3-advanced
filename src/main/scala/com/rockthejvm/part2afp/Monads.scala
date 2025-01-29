@@ -2,6 +2,7 @@ package com.rockthejvm.part2afp
 
 import scala.annotation.targetName
 
+//noinspection DuplicatedCode
 object Monads {
 
   def listStory(): Unit = {
@@ -87,67 +88,83 @@ object Monads {
   // anything we pass to it will not be preformed at construction phase.
   // if we want to preform what we pass, we need ro call unsafeRun
 
-  case class PossiblyMonad[A](unsafeRun: () => A) {
-    def map[B](f: A => B): PossiblyMonad[B] =
-      PossiblyMonad(() => f(unsafeRun()))
+  case class IOMonad[A](unsafeRun: () => A) {
+    def map[B](f: A => B): IOMonad[B] =
+      IOMonad(() => f(unsafeRun()))
 
-    def flatMap[B](f: A => PossiblyMonad[B]): PossiblyMonad[B] =
-      PossiblyMonad(() => f(unsafeRun()).unsafeRun())
+    def flatMap[B](f: A => IOMonad[B]): IOMonad[B] =
+      IOMonad(() => f(unsafeRun()).unsafeRun())
   }
 
-  object PossiblyMonad {
+  object IOMonad {
     @targetName("pure")
-    def apply[A](value: => A): PossiblyMonad[A] =
-      new PossiblyMonad(() => value)
+    def apply[A](value: => A): IOMonad[A] =
+      new IOMonad(() => value)
 
   }
 
-  def aMonadStory(): Unit = {
+  def possiblyMonadStory(): Unit = {
 
-        val f = (x: Int) => PossiblyMonad(x + 1)
-        val g = (x: Int) => PossiblyMonad(2 * x)
-        val pure = (x: Int) => PossiblyMonad(x)
-        val possiblyMonad = PossiblyMonad(42)
+    val f = (x: Int) => IOMonad(x + 1)
+    val g = (x: Int) => IOMonad(2 * x)
+    val pure = (x: Int) => IOMonad(x)
+    val possiblyMonad = IOMonad(42)
 
-        //exercise: is this a monad? Yes.
+    //exercise: is this a monad? Yes.
 
 
-        val leftIdentity =  pure(42).flatMap(f) == f(42)
-        val rightIdentity = possiblyMonad.flatMap(pure) == possiblyMonad
-        val associativity = possiblyMonad.flatMap(f).flatMap(g) == possiblyMonad.flatMap(x => f(x).flatMap(g))
+    val leftIdentity =  pure(42).flatMap(f) == f(42)
+    val rightIdentity = possiblyMonad.flatMap(pure) == possiblyMonad
+    val associativity = possiblyMonad.flatMap(f).flatMap(g) == possiblyMonad.flatMap(x => f(x).flatMap(g))
 
-        println(leftIdentity)
-        println(rightIdentity)
-        println(associativity)
-        // ^^ false negative.
+    println(leftIdentity)
+    println(rightIdentity)
+    println(associativity)
+    // ^^ false negative.
 
-        //real test: values produced -- we need to put unsafe run on both sides of equality check.
-        val leftIdentity_v2 = pure(42).flatMap(f).unsafeRun() == f(42).unsafeRun()
-        val rightIdentity_v2 = possiblyMonad.flatMap(pure).unsafeRun() == possiblyMonad.unsafeRun()
-        val associativity_v2 = possiblyMonad.flatMap(f).flatMap(g).unsafeRun() == possiblyMonad.flatMap(x => f(x).flatMap(g)).unsafeRun()
+    //real test: values produced -- we need to put unsafe run on both sides of equality check.
+    val leftIdentity_v2 = pure(42).flatMap(f).unsafeRun() == f(42).unsafeRun()
+    val rightIdentity_v2 = possiblyMonad.flatMap(pure).unsafeRun() == possiblyMonad.unsafeRun()
+    val associativity_v2 = possiblyMonad.flatMap(f).flatMap(g).unsafeRun() == possiblyMonad.flatMap(x => f(x).flatMap(g)).unsafeRun()
 
-        println(leftIdentity_v2)
-        println(rightIdentity_v2)
-        println(associativity_v2)
+    println(leftIdentity_v2)
+    println(rightIdentity_v2)
+    println(associativity_v2)
+
+    val fs = (x: Int) => IOMonad {
+      println("incrementing")
+      x + 1
+    }
+
+    val gs = (x: Int) => IOMonad {
+      println("doubling")
+      x * 2
+    }
+
+    val associativity_v3 = possiblyMonad.flatMap(fs).flatMap(gs).unsafeRun() == possiblyMonad.flatMap(x => fs(x).flatMap(gs)).unsafeRun()
   }
 
   def possiblyMonadExample(): Unit = {
-    val aPossiblyMonad = PossiblyMonad {
+    val aPossiblyMonad = IOMonad {
       println("printing my first possibly monad")
       //do computations
       42
     }
-    val anotherPM = PossiblyMonad {
-      println("my second PM")
+    val anotherPM = IOMonad {
+      println("my second PM") 
       "Scala"
     }
-    val aResult = aPossiblyMonad.unsafeRun()
-    println(aResult)
+//    val aResult = aPossiblyMonad.unsafeRun()
+//    println(aResult)
+
+    val aForComprehension = for { // computations are DESCRIBED, not EXECUTED
+      num<- aPossiblyMonad
+      lang <- anotherPM
+    } yield s"$num-$lang"
   }
 
 
     def main(args: Array[String]): Unit = {
-      possiblyMonadExample()
-
+      possiblyMonadStory()
     }
   }
