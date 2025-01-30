@@ -1,5 +1,7 @@
 package com.rockthejvm.part3async
 
+import java.util.concurrent.Executors
+
 object JVMConcurrencyProblems {
 
   def runInParallel(): Unit = {
@@ -44,17 +46,67 @@ object JVMConcurrencyProblems {
   def demoBankingProblem(): Unit = {
     (1 to 10000).foreach { _ =>
       val account = new BankAccount(50000)
-      val thread1 = new Thread(() => buy(account, "shoes", 3000))
-      val thread2 = new Thread(() => buy(account, "iPhone", 4000))
+      val thread1 = new Thread(() => buySafe(account, "shoes", 3000))
+      val thread2 = new Thread(() => buySafe(account, "iPhone", 4000))
       thread1.start()
       thread2.start()
       thread1.join()
       thread2.join()
-      if (account.amount != 43000) println(s"AHA! I've just broken the bank: ${account.amount}")
+      if (account.amount != 42000) println(s"AHA! I've just broken the bank: ${account.amount}")
     }
   }
 
+  //exercises
+
+
+  def inceptionThreads(maxThreads: Int, i: Int): Thread = {
+    new Thread(() => {
+      if (i < maxThreads) {
+        val newThread = inceptionThreads(maxThreads, i + 1)
+        newThread.start()
+        newThread.join()
+      }
+      println(s"hello from thread $i")
+    })
+  }
+
   def main(args: Array[String]): Unit = {
-    demoBankingProblem()
+    inceptionThreads(10, 1).start()
   }
 }
+
+//  def inceptionThreads(n: Int): Unit = {
+//    val threadPool = Executors.newFixedThreadPool(n)
+//    val tasksReverse = (1 to n).map { t =>
+//      new Thread(() => runThread(t))
+//    }
+//
+//    tasksReverse.foreach(threadPool.execute)
+//    threadPool.shutdown()
+//  }
+//
+//  def runThread(threadNum: Int): Unit = {
+//    this.synchronized {
+//      println(s"hello from thread $threadNum")
+//    }
+//  }
+//
+//
+//  def main(args: Array[String]): Unit = {
+//    inceptionThreads(10)
+//  }
+
+//  def inceptionThreads(n: Int): Unit = {
+//
+//    def spawnThread(currentMap: Map[Int, Thread]): Map[Int, Thread] = {
+//      val newThreadNum = currentMap.last._1 + 1
+//      if (newThreadNum == n) currentMap
+//      else {
+//        val newTuple = newThreadNum -> new Thread(() => runThread(newThreadNum))
+//        spawnThread(currentMap + newTuple)
+//      }
+//    }
+//
+//    spawnThread(Map(1 -> new Thread)).foreach((_, thread) => thread.start())
+//  }
+//
