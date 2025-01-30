@@ -58,7 +58,7 @@ object JVMConcurrencyProblems {
 
   //exercises
 
-
+  // 1
   def inceptionThreads(maxThreads: Int, i: Int): Thread = {
     new Thread(() => {
       if (i < maxThreads) {
@@ -70,10 +70,45 @@ object JVMConcurrencyProblems {
     })
   }
 
+  //2
+  def minMaxX(): Unit = {
+    var x = 0
+    val threads = (1 to 100).map(_ => new Thread(() => x +=1))
+    threads.foreach(_.start())
+  }
+  // max = 100 min = 1
+
+  //3
+  def demoSleepFallacy(): Unit = {
+    var message= ""
+    val awesomeThread = new Thread(() => {
+      Thread.sleep(1000)
+      message= "Scala is awesome"
+    })
+
+    message = "Scala sucks"
+    awesomeThread.start()
+    Thread.sleep(1001)
+    //solution join the worker thread
+    awesomeThread.join()
+    println(message)
+  }
+
+  //almost always message= "Scala is awesome" but it's not guaranteed
+  //some OS yields the sleep execution, meaning it gives the CPU some important thread.
+  //if this takes more than 1001 seconds, everything has finished "sleeping" and "scala sucks" might be printed before
+  // awesome thread has the chance to execute.
+
+
   def main(args: Array[String]): Unit = {
     inceptionThreads(10, 1).start()
+    demoSleepFallacy()
   }
 }
+
+
+
+
 
 //  def inceptionThreads(n: Int): Unit = {
 //    val threadPool = Executors.newFixedThreadPool(n)
