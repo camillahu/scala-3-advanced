@@ -90,11 +90,96 @@ object Futures {
   //onComplete is a hassle
   //solution: Functional composition
 
+  def sendMessageToBestFriend_v2(accountId: String, message: String): Unit = {
+    val profileFuture = SocialNetwork.fetchProfile(accountId)
+    profileFuture.flatMap { profile => // Future[Unit]
+      SocialNetwork.fetchBestFriend(profile).map { bestFriend => // Future[Unit]
+        profile.sendMessage(bestFriend, message) // unit
+      }
+    }
+  }
+
+  //with for comp-- best approach
+  def sendMessageToBestFriend_v3(accountId: String, message: String): Unit = {
+    for {
+      profile <- SocialNetwork.fetchProfile(accountId)
+      bestFriend <- SocialNetwork.fetchBestFriend(profile)
+    } yield profile.sendMessage(bestFriend, message) // identical to v2
+  }
+
+  val janeProfileFuture = SocialNetwork.fetchProfile("rtjvm.id.2-jane")
+  //map transforms value contained inside asynchronously
+  val janeFuture: Future[String] = janeProfileFuture.map(profile => profile.name)
+
+  //how to compose Futures together with flatMap without using oncomplete:
+  val janesBestFriend: Future[Profile] = janeProfileFuture.flatMap(profile => SocialNetwork.fetchBestFriend(profile))
+
+  val janesBestFriendFilter: Future[Profile] = janesBestFriend.filter(profile => profile.name.startsWith("Z"))
+
+  //fallbacks -- handling errors with recover
+  val profileNoMatterWhat = SocialNetwork.fetchProfile("unknown id").recover {
+    case e: Throwable => Profile("rtjvm.id.0-dummy", "Forever alone")
+  }
+
+  //analogy-- recover is "map" and recoverWith is "flatMap"
+
+  val aFetchedProfileNoMatterWhat: Future[Profile] = SocialNetwork.fetchProfile("unknown id").recoverWith {
+    case e: Throwable => SocialNetwork.fetchProfile("rtjvm.if.0-dummy")
+  } //if code before .recoverWith fails, the partial function will be run
+
+
+  //with fallback to -- if both codes fail, the exception will be returned from the code before .fallBackTo
+  val fallbackProfile: Future[Profile] = SocialNetwork.fetchProfile("unknown id")
+    .fallbackTo(SocialNetwork.fetchProfile("rtjvm.if.0-dummy"))
+
+  /*
+    Block for a future -- should only be used in extreme scenarios:
+    forces future to block before it is computed.
+  * */
+
+  case class User(name: String)
+  case class Transaction(sender: String, receiver: String, amount: Double, status: String)
+
+  object BankingApp {
+    // "APIs"
+    def fetchUser(name: String): Future[User] = Future {
+      // simulate some DB fetching
+      Thread.sleep(500)
+      User(name)
+    }
+
+    def createTransaction(user: User, merchantName: String, amount: Double): Future[Transaction] = {
+      // simulate payment
+      Thread.sleep(1000)
+      Transaction(user.name, merchantName, amount, "SUCCESS")
+    }
+
+    //"external API"
+
+    def purchase(username: String, item: String, merchantName: String, price: Double) = {
+      // 1- fetch user
+      // 2- create transaction
+      // 3- Wait for transaction to finish
+
+      val transactionStatusFuture = for {
+        user <- fetchUser(username)
+        transaction <-createTransaction(user, merchantName, price)
+      } yield transaction.status
+      
+      //blocking call -- blocking thread until Future call has been completed.
+    }
+  }
+
+
   def main(args: Array[String]): Unit = {
-    println(futureInstantResult)
-    //will be of type Option[Try[Int]] -- it inspects the value right now.
-    //may or may not get the result of computation because it might take a long time.
-    Thread.sleep(2000)
-    executor.shutdown()
+
+    sendMessageToBestFriend_v3("rtjvm.id.2-jane", "Hi best friend")
+
+
+//    println(futureInstantResult)
+//    //will be of type Option[Try[Int]] -- it inspects the value right now.
+//    //may or may not get the result of computation because it might take a long time.
+//    Thread.sleep(2000)
+//    executor.shutdown()
   }
 }
