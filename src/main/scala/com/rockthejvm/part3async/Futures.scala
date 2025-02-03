@@ -1,8 +1,9 @@
 package com.rockthejvm.part3async
 
 import java.util.concurrent.Executors
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Random, Success, Try}
+import scala.concurrent.duration.*
 
 object Futures {
 
@@ -26,10 +27,10 @@ object Futures {
   val futureInstantResult: Option[Try[Int]] = aFuture.value
 
   //callbacks
-  aFuture.onComplete {
-    case Success(value) => println(s"I've completed with the meaning of life $value")
-    case Failure(exception) => println(s"My async computation failed $exception")
-  } //will be evaluated on some other thread-- have no control over when or which threads
+//  aFuture.onComplete {
+//    case Success(value) => println(s"I've completed with the meaning of life $value")
+//    case Failure(exception) => println(s"My async computation failed $exception")
+//  } //will be evaluated on some other thread-- have no control over when or which threads
 
   /*
   * Functional composition
@@ -156,24 +157,31 @@ object Futures {
 
     //"external API"
 
-    def purchase(username: String, item: String, merchantName: String, price: Double) = {
+    def purchase(username: String, item: String, merchantName: String, price: Double):String = {
       // 1- fetch user
       // 2- create transaction
       // 3- Wait for transaction to finish
 
-      val transactionStatusFuture = for {
+      val transactionStatusFuture: Future[String] = for {
         user <- fetchUser(username)
         transaction <-createTransaction(user, merchantName, price)
       } yield transaction.status
       
       //blocking call -- blocking thread until Future call has been completed.
+      //seconds is an extension method in int which comes with the import scala.concurrent.duration.*
+      Await.result (transactionStatusFuture, 2.seconds) // throws TimeoutException if the future doesn't finish within 2s
     }
   }
 
 
   def main(args: Array[String]): Unit = {
+    
+    println("purchasing...")
+    println(BankingApp.purchase("daniel-234", "shoes", "merchant-987", 3.56))
+    println("purchase complete")
+    
 
-    sendMessageToBestFriend_v3("rtjvm.id.2-jane", "Hi best friend")
+//    sendMessageToBestFriend_v3("rtjvm.id.2-jane", "Hi best friend")
 
 
 //    println(futureInstantResult)
