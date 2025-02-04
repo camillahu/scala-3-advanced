@@ -1,7 +1,7 @@
 package com.rockthejvm.part3async
 
 import java.util.concurrent.Executors
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.util.{Failure, Random, Success, Try}
 import scala.concurrent.duration.*
 
@@ -149,7 +149,7 @@ object Futures {
       User(name)
     }
 
-    def createTransaction(user: User, merchantName: String, amount: Double): Future[Transaction] = {
+    def createTransaction(user: User, merchantName: String, amount: Double): Future[Transaction] = Future {
       // simulate payment
       Thread.sleep(1000)
       Transaction(user.name, merchantName, amount, "SUCCESS")
@@ -173,12 +173,104 @@ object Futures {
     }
   }
 
+  //PROMISES -- made to pass futures around to be completed manually elsewhere.
+  //Controllable wrappers over a future, while futures are "read-only".
+
+
+//  val promise = Promise[Int]()
+//  val futureInside: Future[Int] = promise.future
+//
+//  //thread 1 - "consumer": monitor the future for completion
+//  futureInside.onComplete{
+//    case Success(value) => println(s"[consumer] I've just been completed with $value")
+//    case Failure(ex) => ex.printStackTrace()
+//  }
+//
+//  // thread 2 - "producer"
+//  val producerThread = new Thread(() => {
+//    println("[producer] crunching numbers...")
+//    //fulfill the promise
+//    promise.success(42)
+//    println("[producer] I'm done")
+//  })
+//
+//  producerThread.start()
+
+
+
+  //Exercises
+
+  //1
+  private val aPromise_v2 = Promise[Int]()
+  val aFuture_v2: Future[Int] = aPromise_v2.future
+  aPromise_v2.success(2)
+
+  //2
+  def inSequence[A, B](first: Future[A], second: Future[B]): Future[B] = {
+    first.flatMap(_ => second)
+  }
+
+  private val firstFuture = Future[Int].apply(3 + 1)
+  private val secondFuture = Future[Int].apply(10)
+  private val futureOutput= inSequence(firstFuture, secondFuture)
+
+  //3
+//  def first[A](f1: Future[A], f2: Future[A]): Future[A] = {
+//    val aPromise = Promise[A]()
+//    f1.onComplete(aPromise.tryComplete)
+//    f2.onComplete(aPromise.tryComplete)
+//
+//    aPromise.future
+//  }
+//
+//  val fu1: Future[Int] = Future(1 + 1)
+//  val fu2: Future[Int] = Future(1 + 2)
+//  val firstCall = first(fu1, fu2)
+  
+  
+  //4 
+  def last[A](f1: Future[A], f2: Future[A]): Future[A] = {
+    val aPromise = Promise[A]()
+    f1.onComplete(_ => aPromise.complete(f2))
+    f2.onComplete(_ => aPromise.complete(f1))
+
+    aPromise.future
+  }
+
+
+  //solutions
+  //1
+  def completeImmediately[A](value:A): Future[A] = Future(value) //async completion asap
+  def completeImmediately_v2[A](value:A): Future[A] = Future.successful(value) //synchronous completion
+
+  //3
+  def first[A](f1: Future[A], f2: Future[A]): Future[A] = {
+    val aPromise = Promise[A]()
+    f1.onComplete(r1 => aPromise.complete(r1))
+    f2.onComplete(r2 => aPromise.complete(r2))
+
+    aPromise.future
+  }
+
 
   def main(args: Array[String]): Unit = {
+
+
+
+//    aFuture_v2.onComplete {
+//      case Success(v) => println(s"Future completed with value $v")
+//      case _ => println("Future failed")
+//    }
+
+//    futureOutput.onComplete {
+//      case Success(value) => println(s"Future completed with value $value")
+//      case Failure(exception) => println(s"Future failed with exception: $exception")
+//    }
+
     
-    println("purchasing...")
-    println(BankingApp.purchase("daniel-234", "shoes", "merchant-987", 3.56))
-    println("purchase complete")
+//    println("purchasing...")
+//    println(BankingApp.purchase("daniel-234", "shoes", "merchant-987", 3.56))
+//    println("purchase complete")
     
 
 //    sendMessageToBestFriend_v3("rtjvm.id.2-jane", "Hi best friend")
