@@ -228,14 +228,29 @@ object Futures {
 //  val firstCall = first(fu1, fu2)
   
   
-  //4 
-  def last[A](f1: Future[A], f2: Future[A]): Future[A] = {
-    val aPromise = Promise[A]()
-    f1.onComplete(_ => aPromise.complete(f2))
-    f2.onComplete(_ => aPromise.complete(f1))
+//  //4
+//  def last[A](f1: Future[A], f2: Future[A]): Future[A] = {
+//    val aPromise = Promise[A]()
+//    f1.onComplete(_ => f2.onComplete(r2 => aPromise.complete(r2)))
+//    f2.onComplete(_ => f1.onComplete(r1 => aPromise.complete(r1)))
+//
+//    aPromise.future
+//  }
 
-    aPromise.future
-  }
+  //5
+//  def retryUntil[A] (action: () => Future[(A)], predicate: A => Boolean): Future[A] = {
+//    action().flatMap{result =>
+//      if(predicate(result)) Future.successful(result)
+//      else retryUntil(action, predicate)}
+//  }
+//
+//  def randomInt(): Future[Int] = {
+//    val random = new Random
+//    Future(random.nextInt(2000))
+//  }
+//
+//  def isEven(n:Int): Boolean = n % 2 == 0
+
 
 
   //solutions
@@ -246,16 +261,72 @@ object Futures {
   //3
   def first[A](f1: Future[A], f2: Future[A]): Future[A] = {
     val aPromise = Promise[A]()
-    f1.onComplete(r1 => aPromise.complete(r1))
-    f2.onComplete(r2 => aPromise.complete(r2))
+    f1.onComplete(r1 => aPromise.tryComplete(r1))
+    f2.onComplete(r2 => aPromise.tryComplete(r2))
 
     aPromise.future
   }
 
+  //4
+  def last[A](f1: Future[A], f2: Future[A]): Future[A] = {
+    val bothPromise = Promise[A]()
+    val lastPromise = Promise[A]()
+
+    def checkAndComplete(result: Try[A]): Unit =
+      if(!bothPromise.tryComplete(result))
+        lastPromise.complete(result)
+
+    f1.onComplete(checkAndComplete)
+    f2.onComplete(checkAndComplete)
+
+    lastPromise.future
+  }
+
+  def testFirstAndLast = {
+    lazy val fast = Future {
+      Thread.sleep(100)
+      1
+    }
+
+    lazy val slow = Future {
+      Thread.sleep(200)
+      2
+    }
+
+    first(fast, slow).foreach(result => println(s"FIRST: $result"))
+    last(fast, slow).foreach(result => println(s"LAST: $result"))
+  }
+
+  //5
+
+  def retryUntil[A](action: () => Future[(A)], predicate: A => Boolean): Future[A] = {
+    action().filter(predicate)
+      .recoverWith {
+        case _ => retryUntil(action, predicate)
+      }
+  }
+
+  def testRetries(): Unit = {
+    val random = new Random()
+    val action = () => Future {
+      Thread.sleep(100)
+      val nextValue = random.nextInt(100)
+      println(s"Generated $nextValue")
+      nextValue
+    }
+    val predicate = (x: Int) => x < 10
+
+    retryUntil(action, predicate).foreach(finalResult => println(s"Setteled on $finalResult"))
+  }
+
 
   def main(args: Array[String]): Unit = {
+    testRetries()
 
 
+
+    Thread.sleep(2000)
+    executor.shutdown()
 
 //    aFuture_v2.onComplete {
 //      case Success(v) => println(s"Future completed with value $v")
