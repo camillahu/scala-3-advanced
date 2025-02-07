@@ -34,7 +34,7 @@ object JVMConcurrencyIntro {
   }
 
   //executors -- manage the lifecycle of the thread pool for us
-  def demoExecuters(): Unit = {
+  def demoExecutors(): Unit = {
     val threadPool = Executors.newFixedThreadPool(4)
     // submit a computation
     threadPool.execute(() => println("something in the thread pool"))
@@ -57,6 +57,6 @@ object JVMConcurrencyIntro {
   }
 
   def main(args: Array[String]): Unit = {
-    demoExecuters()
+    demoExecutors()
   }
 }
