@@ -56,47 +56,51 @@ object ExtensionMethods {
   val firstLast_v2 = ends(aList) //same as aList.ends
 
   //exercises
+    //1
+    extension (int: Int) {
+      def isPrime: Boolean = {
+        def checkNum(acc: Int): Boolean = {
+          if (acc <= 1) true
+          else if (int % acc == 0) false
+          else checkNum(acc - 1)
+        }
 
-  //1
-  extension (int: Int) {
-    def isPrime: Boolean = {
-      def checkNum(acc: Int): Boolean  = {
-        if( acc <= 1 )true
-        else if (int % acc == 0) false
-        else checkNum(acc-1)
+        if (int <= 1) false
+        else checkNum(int - 1)
       }
-      if (int <= 1) false
-      else checkNum(int - 1)
     }
-  }
 
-  //1.2
-  extension (int: Int) {
-    def isPrime_v2: Boolean = {
-      val aParList: ParSeq[Int] = (2 to int-1).toList.par
-      aParList.exists(n => int % n == 0)
+    //1.2
+    extension (int: Int) {
+      def isPrime_v2: Boolean = {
+        val aParList: ParSeq[Int] = (2 to int - 1).toList.par
+        aParList.exists(n => int % n == 0)
+      }
     }
-  }
 
 
-  //2
-  sealed abstract class Tree[A]
-  case class Leaf[A](value:A) extends Tree[A]
-  case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+    //2
+    sealed abstract class Tree[A]
 
-  extension[A, B](tree: Tree[A]) {
-    def map(f: A => B): Tree[B] = tree match{
-      case Leaf(value) => Leaf(f(value))
-      case Branch(left, right) => Branch(left.map(f), right.map(f))
+    case class Leaf[A](value: A) extends Tree[A]
+
+    case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+    extension [A, B](tree: Tree[A]) {
+      def map(f: A => B): Tree[B] = tree match {
+        case Leaf(value) => Leaf(f(value))
+        case Branch(left, right) => Branch(left.map(f), right.map(f))
+      }
+      def forall(predicate: A => Boolean): Boolean = tree match {
+        case Leaf(value) if predicate(value) => true
+        case Branch(left, right) if left.forall(predicate) && right.forall(predicate) => true
+        case _ => false
+      }
+      def sum(using combinator: Combinator[A]): A = tree match {
+        case Leaf(value) => value
+        case Branch(left, right) => Branch(left.sum(combinator), right.sum(combinator))
+      }
     }
-    def forall(predicate: A => Boolean): Boolean = tree match{
-      case Leaf(value) if predicate(value) => true
-      case Branch(left, right) if left.forall(predicate) && right.forall(predicate) => true
-      case _ => false
-    }
-  }
-
-
 
   def main(args: Array[String]): Unit = {
 //    println(danielGreeting)
