@@ -24,7 +24,7 @@ object Givens {
   val sortedPeople = people.sorted //(personOrdering) is automatically passed by the compiler.
 
   //equivalent of the above, just different syntax:
-  object PersonAltSyntax {
+  object PersonAltSyntax { // (wrapped in new object to avoid double definitions) 
     given personOrdering: Ordering[Person] with {
       override def compare(x: Person, y: Person): Int =
         x.name.compareTo(y.name)
@@ -75,7 +75,7 @@ object Givens {
   given listOrderingBasedOnCombinator[A](using ord: Ordering[A])(using combinator: Combinator[A]): Ordering[List[A]] with {
     override def compare(x: List[A], y: List[A]) =
       ord.compare(combineAll(x), combineAll(y))
-  } //powerful because it is avaliable for any type of which you have an ordering and combiner in scope.
+  } //powerful because it is available for any type of which you have an ordering and combiner in scope.
 
 
   // pass a regular value instead of the given in scope:
@@ -85,8 +85,46 @@ object Givens {
 
   val listProduct = combineAll(List(1,2,3,4))(using myCombinator)
 
+  //exercises
+
+  //1
+//  given optionOrdering[A](using ord: Ordering[A]): Ordering[Option[A]] with {
+//    override def compare(x: Option[A], y: Option[A]) = (x, y) match {
+//      case (None, None) => 0
+//      case (None, _) => -1
+//      case (_, None) => 1
+//      case (Some(a), Some(b)) => ord.compare(a, b)
+//    }
+//  }
+
+  //2
+//  given optionOrdering_v2[A: Ordering]: Ordering[Option[A]] with {
+//    override def compare(x: Option[A], y: Option[A]) = (x, y) match {
+//      case (None, None) => 0
+//      case (None, _) => -1
+//      case (_, None) => 1
+//      case (Some(a), Some(b)) => fetchGivenValue[Ordering[A]].compare(a, b)
+//    }
+//  }
+//
+//  //method to summon the ordering belonging to the correct type. Will only work if the correct ordering is in scope.
+//  //this is how the summon method in scala library works:
+//  def fetchGivenValue[A](using theValue: A): A = theValue
+
+  //2 with summon
+  given optionOrdering_v3[A: Ordering]: Ordering[Option[A]] with {
+    override def compare(x: Option[A], y: Option[A]) = (x, y) match {
+      case (None, None) => 0
+      case (None, _) => -1
+      case (_, None) => 1
+      case (Some(a), Some(b)) => summon[Ordering[A]].compare(a, b)
+    }
+  }
+
+
   def main(args: Array[String]): Unit = {
     println(anOrderedList) // [1, 2, 3, 4] without given, [4, 3, 2, 1] when given.
     println(anInverseOrderedList) // [4, 3, 2, 1]
+    println(List(Option(1), Option.empty[Int], Option(3), Option(-1000)).sorted)
   }
 }
