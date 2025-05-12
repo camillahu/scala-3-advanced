@@ -23,6 +23,7 @@ object ParallelCollections {
   * */
 
   //parallel collection build explicitly/ yourself
+  
   val aParVector = ParVector[Int](1,2,3,4,5,6)
 
   def measure[A](expression: => A): Long = {
