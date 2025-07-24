@@ -10,7 +10,7 @@ object JVMConcurrencyIntro {
         println("waiting...")
         Thread.sleep(2000)
         println("running on some thread")
-      }hehehehvvldldkmduywwhvhjkee
+      }
     }
 
     //threads on the JVM

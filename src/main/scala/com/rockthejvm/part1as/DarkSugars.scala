@@ -54,6 +54,7 @@ object DarkSugars {
   val aPrependedList = 0 :: aList // aList.::(0)
   val aBigList = 0 :: 1 :: 2 :: List(3,4) // List(3,4).::(2).::(1).::(0)
 
+    // can make your own right-associative methods: 
   class MySteam[T] {
     infix def -->:(value: T): MySteam[T] = this //impl not important
   }

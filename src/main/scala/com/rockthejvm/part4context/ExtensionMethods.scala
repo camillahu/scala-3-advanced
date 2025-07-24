@@ -80,27 +80,27 @@ object ExtensionMethods {
 
 
     //2
-    sealed abstract class Tree[A]
-
-    case class Leaf[A](value: A) extends Tree[A]
-
-    case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
-
-    extension [A, B](tree: Tree[A]) {
-      def map(f: A => B): Tree[B] = tree match {
-        case Leaf(value) => Leaf(f(value))
-        case Branch(left, right) => Branch(left.map(f), right.map(f))
-      }
-      def forall(predicate: A => Boolean): Boolean = tree match {
-        case Leaf(value) if predicate(value) => true
-        case Branch(left, right) if left.forall(predicate) && right.forall(predicate) => true
-        case _ => false
-      }
-      def sum(using combinator: Combinator[A]): A = tree match {
-        case Leaf(value) => value
-        case Branch(left, right) => Branch(left.sum(combinator), right.sum(combinator))
-      }
-    }
+//    sealed abstract class Tree[A]
+//
+//    case class Leaf[A](value: A) extends Tree[A]
+//
+//    case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+//
+//    extension [A, B](tree: Tree[A]) {
+//      def map(f: A => B): Tree[B] = tree match {
+//        case Leaf(value) => Leaf(f(value))
+//        case Branch(left, right) => Branch(left.map(f), right.map(f))
+//      }
+//      def forall(predicate: A => Boolean): Boolean = tree match {
+//        case Leaf(value) if predicate(value) => true
+//        case Branch(left, right) if left.forall(predicate) && right.forall(predicate) => true
+//        case _ => false
+//      }
+//      def sum(using combinator: Combinator[A]): A = tree match {
+//        case Leaf(value) => value
+//        case Branch(left, right) => Branch(left.sum(combinator), right.sum(combinator))
+//      }
+//    }
 
   def main(args: Array[String]): Unit = {
 //    println(danielGreeting)
